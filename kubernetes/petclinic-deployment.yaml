@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nttdemo-spring-petclinic
+  labels:
+     app: petclinic
+
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: petclinic
+
+  template:
+    metadata:
+      labels:
+        app: petclinic
+    spec:
+      containers:
+      - name: petclinic
+        image: aashikarao/spring-petclinic-angularjs
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8086
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1

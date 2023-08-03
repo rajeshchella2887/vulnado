@@ -1,0 +1,25 @@
+---
+- name: Create Petclinic Docker
+  hosts: localhost
+  user: nttadmin01
+  tasks:
+    - name: create docker image
+      command: docker build -t aashikarao/spring-petclinic-angularjs:{{ build_number }} .
+
+    - name: Add tag to image
+      command: docker tag aashikarao/spring-petclinic-angularjs:{{ build_number }} aashikarao/spring-petclinic-angularjs:latest
+
+    - name: login to DockerHub
+      command: docker login -u {{ docker_username }} -p {{ docker_password }}
+
+    - name: push image to DockerHub
+      command: docker push aashikarao/spring-petclinic-angularjs:{{ build_number }}
+
+    - name: push image to DockerHub with latest tag
+      command: docker push aashikarao/spring-petclinic-angularjs:latest
+
+    - name: remove docker image from server
+      command: docker rmi aashikarao/spring-petclinic-angularjs:{{ build_number }}
+
+    - name: logout from DockerHub
+      command: docker logout

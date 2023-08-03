@@ -1,0 +1,12 @@
+---
+- name: Deploy petclinic
+  hosts: server1
+  become: yes
+  become_user: nttadmin01
+  become_method: su
+  tasks:
+    - name: Create deployment to 3 pods on Kubernetes
+      command: kubectl apply -f /opt/kube-apps/petclinic-deployment.yaml
+
+    - name: Expose petclinic app as a service
+      command: kubectl apply -f /opt/kube-apps/petclinic-service.yaml
