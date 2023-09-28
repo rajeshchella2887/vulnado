@@ -1,3 +1,6 @@
 {
-  "registry": "https://registry.bower.io"
+  "directory": "bower_components",
+  "registry": "https://registry.bower.io",
+  "strict-ssl": false
 }
+
