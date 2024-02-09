@@ -1,4 +1,4 @@
-name: Java CI with Maven
+name: Java Project - Github 
 
 on:
   push:
@@ -20,10 +20,30 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build with Maven
-      # run: mvn -B package --file pom.xml
       run: |
         mvn -N io.takari:maven:wrapper
         ./mvnw clean install
         cd spring-petclinic-server
         mvn clean package docker:build -X
     
+    - name: Set up JDK 17 for SonarQube
+      uses: actions/setup-java@v1
+      with:
+        java-version: 17
+    - name: Cache SonarQube packages
+      uses: actions/cache@v1
+      with:
+        path: ~/.sonar/cache
+        key: ${{ runner.os }}-sonar
+        restore-keys: ${{ runner.os }}-sonar
+    - name: Cache Maven packages for SonarQube
+      uses: actions/cache@v1
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+    - name: Build and analyze with SonarQube
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=java_github -Dsonar.projectName='java_github'
