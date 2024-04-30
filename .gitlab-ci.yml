@@ -6,16 +6,19 @@ stages:
 
 Remote-Check-Out:
   stage: Remote-Check-Out
+  image: docker:19.03.12
   script:
     - pwd
 
 Remote-Code-Scanning:
   stage: Remote-Code-Scanning
+  image: docker:19.03.12
   script:
     - pwd
 
 Code Check-In:
   stage: Code Check-In
+  image: docker:19.03.12
   script:
     - pwd
 
