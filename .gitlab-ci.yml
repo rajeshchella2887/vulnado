@@ -1,7 +1,18 @@
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+  - template: Security/License-Scanning.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+  # - template: Security/Container-Scanning.gitlab-ci.yml
+variables:
+  SECURE_ANALYZERS_PREFIX: "10.16.0.112:5000"
+  SCAN_KUBERNETES_MANIFESTS: "true"
+
 stages:
 - Remote-Check-Out
 - Remote-Code-Scanning
 - Code Check-In
+- test
 - Sast-Scan
 
 Remote-Check-Out:
