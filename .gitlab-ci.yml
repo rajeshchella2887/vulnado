@@ -9,10 +9,9 @@ variables:
 
 stages:
 - Remote-Check-Out
-- Remote-Code-Scanning
-- Code Check-In
 - test
-- Sast-Scan
+- SonarQube-Scanning
+- Check-Quality-Gate
 
 Remote-Check-Out:
   stage: Remote-Check-Out
@@ -20,17 +19,6 @@ Remote-Check-Out:
   script:
     - pwd
 
-Remote-Code-Scanning:
-  stage: Remote-Code-Scanning
-  image: docker:19.03.12
-  script:
-    - pwd
-
-Code Check-In:
-  stage: Code Check-In
-  image: docker:19.03.12
-  script:
-    - pwd
 
 # Sast-Scan:
 #   stage: Sast-Scan
@@ -42,3 +30,16 @@ Code Check-In:
 #     reports:
 #       sast: gl-sast-report.json
 #
+
+SonarQube-Scanning:
+  stage: SonarQube-Scanning
+  image: docker:19.03.12
+  script:
+    - pwd
+
+Check-Quality-Gate:
+  stage: Check-Quality-Gate
+  image: docker:19.03.12
+  script:
+    - pwd
+
