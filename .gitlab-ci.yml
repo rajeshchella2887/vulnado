@@ -11,7 +11,6 @@ stages:
 - Remote-Check-Out
 - test
 - SonarQube-Scanning
-- Sonarqube-Vulnerability-Report
 - Check-Quality-Gate
 
 Remote-Check-Out:
@@ -53,19 +52,8 @@ SonarQube-Scanning:
     - main
     - develop
 
-Sonarqube-Vulnerability-Report:
-  stage: Sonarqube-Vulnerability-Report
+Check-Quality-Gate:
+  stage: Check-Quality-Gate
+  image: docker:19.03.12
   script:
-    - 'curl -u "${SONAR_TOKEN}:" "${SONAR_HOST_URL}/api/issues/gitlab_sast_export?projectKey=infinity&branch=${CI_COMMIT_BRANCH}&pullRequest=${CI_MERGE_REQUEST_IID}" -o gl-sast-sonar-report.json'
-  allow_failure: true
-  only:
-    - merge_requests
-    - master
-    - main
-    - develop
-  artifacts:
-    expire_in: 10 day
-    reports:
-      sast: gl-sast-sonar-report.json
-  dependencies:
-    - SonarQube-Scanning
+    - pwd
