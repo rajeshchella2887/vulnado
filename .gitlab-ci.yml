@@ -5,7 +5,7 @@ include:
   - template: Security/Secret-Detection.gitlab-ci.yml
   # - template: Security/Container-Scanning.gitlab-ci.yml
 variables:
-  SECURE_ANALYZERS_PREFIX: "10.16.0.112:5000"
+  SECURE_ANALYZERS_PREFIX: "harbor.rke.pandora.com/gitlab/"
   SCAN_KUBERNETES_MANIFESTS: "true"
 
 stages:
@@ -33,12 +33,12 @@ Code Check-In:
   script:
     - pwd
 
-Sast-Scan:
-  stage: Sast-Scan
-  image: registry.gitlab.com/gitlab-org/security-products/analyzers/semgrep
-  script:
-    - echo "sast scan"
-    # - semgrep --config=p/security-audit --json Build_Pipeline
-  artifacts:
-    reports:
-      sast: gl-sast-report.json
+# Sast-Scan:
+#   stage: Sast-Scan
+#   image: registry.gitlab.com/gitlab-org/security-products/analyzers/semgrep
+#   script:
+#     - echo "sast scan"
+#     # - semgrep --config=p/security-audit --json Build_Pipeline
+#   artifacts:
+#     reports:
+#       sast: gl-sast-report.json
