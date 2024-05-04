@@ -1,0 +1,33 @@
+stages:
+- Remote-Check-Out
+- Remote-Code-Scanning
+- Code Check-In
+- Sast-Scan
+
+Remote-Check-Out:
+  stage: Remote-Check-Out
+  image: docker:19.03.12
+  script:
+    - pwd
+
+Remote-Code-Scanning:
+  stage: Remote-Code-Scanning
+  image: docker:19.03.12
+  script:
+    - pwd
+
+Code Check-In:
+  stage: Code Check-In
+  image: docker:19.03.12
+  script:
+    - pwd
+
+Sast-Scan:
+  stage: Sast-Scan
+  image: registry.gitlab.com/gitlab-org/security-products/analyzers/semgrep
+  script:
+    - echo "sast scan"
+    # - semgrep --config=p/security-audit --json Build_Pipeline
+  artifacts:
+    reports:
+      sast: gl-sast-report.json
