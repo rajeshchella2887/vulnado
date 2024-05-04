@@ -2,7 +2,7 @@ stages:
 - Remote-Check-Out
 - Remote-Code-Scanning
 - Code Check-In
-- Sast-Scan
+- test
 
 Remote-Check-Out:
   stage: Remote-Check-Out
@@ -23,7 +23,7 @@ Code Check-In:
     - pwd
 
 Sast-Scan:
-  stage: Sast-Scan
+  stage: test
   image: registry.gitlab.com/gitlab-org/security-products/analyzers/semgrep
   script:
     - echo "sast scan"
