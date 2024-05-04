@@ -5,7 +5,7 @@ include:
   - template: Jobs/Secret-Detection.gitlab-ci.yml
   # - template: Security/Container-Scanning.gitlab-ci.yml
 variables:
-  SECURE_ANALYZERS_PREFIX: "harbor.rke.pandora.com/gitlab/analyzers"
+  SECURE_ANALYZERS_PREFIX: "harbor.rke.pandora.com/gitlab"
   SCAN_KUBERNETES_MANIFESTS: "true"
 
 stages:
