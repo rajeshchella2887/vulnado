@@ -29,7 +29,6 @@ Remote-Check-Out:
 #   artifacts:
 #     reports:
 #       sast: gl-sast-report.json
-#
 
 SonarQube-Scanning:
   stage: SonarQube-Scanning
