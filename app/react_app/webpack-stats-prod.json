@@ -1,0 +1,32 @@
+{
+    "status": "done",
+    "assets": {
+        "configplan.js": {
+            "name": "configplan.js",
+            "path": "//static//react_components//configplan.js",
+            "publicPath": "/static/react_components/configplan.js"
+        },
+        "form.js": {
+            "name": "form.js",
+            "path": "//static//react_components//form.js",
+            "publicPath": "/static/react_components/form.js"
+        },
+        "jobDetails.js": {
+            "name": "jobDetails.js",
+            "path": "//static//react_components//jobDetails.js",
+            "publicPath": "/static/react_components/jobDetails.js"
+        },
+        "jobsList.js": {
+            "name": "jobsList.js",
+            "path": "//static//react_components//jobsList.js",
+            "publicPath": "/static/react_components/jobsList.js"
+        }
+    },
+    "chunks": {
+        "configplan": ["configplan.js"],
+        "form": ["form.js"],
+        "jobDetails": ["jobDetails.js"],
+        "jobsList": ["jobsList.js"]
+    },
+    "publicPath": "/static/react_components/"
+}

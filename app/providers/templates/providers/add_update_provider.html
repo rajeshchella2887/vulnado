@@ -1,0 +1,64 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% block content %}
+  <div class="col-sm-12">
+    <div class="card">
+      <div class="card-body">{% include 'forms/generic_form.html' %}</div>
+    </div>
+  </div>
+{% endblock %}
+{% block extra_js %}
+  <script src="{% static 'assets/js/plugins/jquery-3.6.4.min.js' %}"></script>
+  <script>
+    const readyFunction = () => {
+
+      const useAccessTokenField = $('#use-access-token-field');
+      const accessTokenField = $('#access-token-field');
+      const usernameField = $('#username-field');
+      const passwordField = $('#password-field');
+
+      const usernameComponent = $('#div_id_username');
+      const passwordComponent = $('#div_id_password');
+      const accessTokenComponent = $('#div_id_access_token');
+
+      const clearAllSensitiveFields = () => {
+        usernameField.val('');
+        passwordField.val('');
+        accessTokenField.val('');
+      };
+
+      const showAccessTokenOnly = () => {
+        usernameComponent.hide();
+        passwordComponent.hide();
+        accessTokenComponent.show();
+      };
+
+      const showUsernamePasswordOnly = () => {
+        usernameComponent.show();
+        passwordComponent.show();
+        accessTokenComponent.hide();
+      };
+
+
+      let firstUseAccessToken = useAccessTokenField.prop('checked');
+      if (firstUseAccessToken) {
+        showAccessTokenOnly();
+      } else {
+        showUsernamePasswordOnly();
+      }
+
+      useAccessTokenField.on("change", (event) => {
+        let usingAccessToken = $(event.target).prop('checked');
+        if (usingAccessToken) {
+          clearAllSensitiveFields();
+          showAccessTokenOnly();
+        } else {
+          clearAllSensitiveFields();
+          showUsernamePasswordOnly();
+        }
+      });
+
+    };
+    $(document).ready(readyFunction);
+  </script>
+{% endblock %}

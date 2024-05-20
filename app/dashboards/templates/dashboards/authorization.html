@@ -1,0 +1,218 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% block extrastyle %}
+  <link rel="stylesheet" href="{% static 'assets/css/plugins/style.css' %}">
+  <link rel="stylesheet"
+        href="{% static 'assets/css/plugins/datatables.min.css' %}">
+  <link rel="stylesheet"
+        href="{% static 'assets/css/plugins/jstree.min.css' %}">
+{% endblock extrastyle %}
+{% block content %}
+  <div class="row">
+    <!-- [ task-detail-left ] start -->
+    <div class="col-xl-4 col-lg-12 task-detail-right">
+      <div class="card">
+        <div class="card-header">
+          <h5>Organization Hierarchy</h5>
+        </div>
+        <div class="card-body task-details">
+          <div id="jstree"></div>
+        </div>
+      </div>
+    </div>
+    <!-- [ task-detail-left ] end -->
+    <!-- [ basic-table ] start -->
+    <div class="col-xl-12" id='table-wrapper'>
+      <div class="card">
+        <div class="card-header">
+          <h5 id="datatable-header"></h5>
+          <span class="d-block m-t-5" id="datatable-description"></span>
+        </div>
+        <div class="card-block table-border-style">
+          <div class="table-responsive">
+            <table class="table" id="datatable">
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- [ basic-table ] end -->
+    <!-- [ details-pane ] start -->
+    <div class="col-xl-12" id="details-wrapper">
+      <div class="card">
+        <div class="card-header">
+          <h5 id="details-header"></h5>
+        </div>
+        <div class="card-block table-border-style" id="details"></div>
+      </div>
+    </div>
+    <!-- [ details-pane ] end -->
+  </div>
+{% endblock %}
+{% block extra_js %}
+  <script src="{% static 'assets/js/plugins/jquery-3.6.4.min.js' %}"></script>
+  <script src="{% static 'assets/js/plugins/datatables.min.js' %}"></script>
+  <script src="{% static 'assets/js/plugins/jstree.min.js' %}"></script>
+  <script>
+    $('#table-wrapper').hide();
+    $('#details-wrapper').hide();
+
+    function displayUserDetails(data) {
+      var details_wrapper = document.getElementById("details-wrapper");
+      if (details_wrapper.style.display === 'none')
+        $('#details-wrapper').show();
+      var table_wrapper = document.getElementById("table-wrapper");
+      if (table_wrapper.style.display !== 'none')
+        $('#table-wrapper').hide();
+      let text = '';
+      text += '<p> ID: ' + data['id'] + '</p>';
+      text += '<p> Username: ' + data['username'] + '</p>';
+      text += '<p> First Name: ' + data['first_name'] + '</p>';
+      text += '<p> Last Name: ' + data['last_name'] + '</p>';
+      text += '<p> Last Login: ' + data['last_login'] + '</p>';
+      text += '<p> Date Joined: ' + data['date_joined'] + '</p>';
+      text += '<p> Active: ' + data['is_active'] + '</p>';
+      text += '<p> Groups: ';
+      for (let group in data['groups']) {
+        text += data['groups'][group]['name'] + ', ';
+      }
+      text += '</p>';
+      text += '<p> Permisions: ';
+      for (let permission in data['user_permissions']) {
+        text += data['user_permissions'][permission]['name'] + ', ';
+      }
+      text += '</p>';
+      document.getElementById("details-header").innerHTML = "User Information";
+      document.getElementById("details").innerHTML = text;
+    };
+
+    function displayGroupDetails(data) {
+      var details_wrapper = document.getElementById("details-wrapper");
+      if (details_wrapper.style.display === 'none')
+        $('#details-wrapper').show();
+      var table_wrapper = document.getElementById("table-wrapper");
+      if (table_wrapper.style.display !== 'none')
+        $('#table-wrapper').hide();
+      let text = '';
+      text += '<p> ID: ' + data['id'] + '</p>';
+      text += '<p> Name: ' + data['name'] + '</p>';
+      text += '<p> No. Of Users: ' + data['num_of_users'] + '</p>';
+      text += '<p> Permissions: ';
+      for (let permission in data['permissions']) {
+        text += data['permissions'][permission]['name'] + ', ';
+      }
+      text += '</p>';
+      document.getElementById("details-header").innerHTML = "Group Information";
+      document.getElementById("details").innerHTML = text;
+    };
+
+    function displayGroupDatatable(org_name) {
+      if ($.fn.DataTable.isDataTable('#datatable')) {
+        $('#datatable').DataTable().clear().destroy();
+        $('#datatable').empty();
+      }
+      var groups_table = $('#datatable').dataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+          url: '/dashboards/organizations/' + org_name,
+          dataSrc: '0.groups',
+          method: 'GET',
+          headers: {
+            "X-CSRFToken": "{{ csrf_token }}"
+          },
+          error: function (xhr, error, thrown) {
+            alert("Error occurred:\n" + xhr.status + ": " + xhr.status);
+          }
+        },
+        columns:
+          [
+            {title: 'Name', data: 'name',},
+            {title: 'Number Of Users', data: 'num_of_users',},
+            {title: 'Permissions', data: 'permissions[, ].name',},
+          ]
+      });
+      document.getElementById("datatable-header").innerHTML = "Groups";
+      let desc = "The table below shows all the groups of this organization";
+      document.getElementById("datatable-description").innerHTML = desc;
+
+      $('#datatable tbody').on('click', 'tr', function () {
+        var data = groups_table.api().row(this).data();
+        displayGroupDetails(data);
+      });
+    };
+
+    function displayUserDatatable(group_name) {
+      if ($.fn.DataTable.isDataTable('#datatable')) {
+        $('#datatable').DataTable().clear().destroy();
+        $('#datatable').empty();
+      }
+      var users_table = $('#datatable').dataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+          url: '/dashboards/groups/' + group_name,
+          dataSrc: '0.user_set',
+          method: 'GET',
+          headers: {
+            "X-CSRFToken": "{{ csrf_token }}"
+          },
+          error: function (xhr, error, thrown) {
+            alert("Error occurred:\n" + xhr.status + ": " + xhr.status);
+          }
+        },
+        columns:
+          [
+            {title: 'Username', data: 'username',},
+            {title: 'Email Address', data: 'email',},
+            {title: 'Last Login', data: 'last_login',},
+            {title: 'Date Joined', data: 'date_joined',},
+            {title: 'Active', data: 'is_active',},
+          ]
+      });
+      document.getElementById("datatable-header").innerHTML = "Users";
+      let desc = "The table below shows all the users of this group";
+      document.getElementById("datatable-description").innerHTML = desc;
+
+      $('#datatable tbody').on('click', 'tr', function () {
+        var data = users_table.api().row(this).data();
+        displayUserDetails(data);
+      });
+    };
+    $(document).ready(function () {
+      $('#jstree').on('select_node.jstree', function (e, data) {
+        var details_wrapper = document.getElementById("details-wrapper");
+        if (details_wrapper.style.display !== 'none')
+          $('#details-wrapper').hide();
+        var table_wrapper = document.getElementById("table-wrapper");
+        if (table_wrapper.style.display === 'none')
+          $('#table-wrapper').show();
+        var node_type = data.node.original.type;
+        var selected_node_text = data.node.text;
+
+        switch (node_type) {
+          case 'organization':
+            displayGroupDatatable(selected_node_text);
+            break;
+          case 'group':
+            displayUserDatatable(selected_node_text);
+            break;
+          case 'user':
+            $.get('/dashboards/users/details/' + selected_node_text, function (data, status, xhr) {
+              if (status == "success")
+                displayUserDetails(data[0]);
+              if (status == "error")
+                alert("Error occurred:\n" + xhr.status + ": " + xhr.status);
+            })
+            break;
+        }
+      }).jstree({
+        core: {
+          data: {
+            url: "{% url 'dashboards:tree' %}",
+          }
+        }
+      });
+    });
+  </script>
+{% endblock %}

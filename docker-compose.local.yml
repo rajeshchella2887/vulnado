@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: ./app
+      dockerfile: docker.local.Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./app/:/usr/src/app/
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./app/envs/local.env
+    depends_on:
+      - db
+  db:
+    image: postgres:13.0-alpine
+    volumes:
+      - portal_postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5440:5432"
+    environment:
+      - POSTGRES_USER=local_portal_user
+      - POSTGRES_PASSWORD=local_portal_password
+      - POSTGRES_DB=ntt_portal_db
+
+volumes:
+#  NOTE: need to change volume for other microservices, will have conflicts if we reuse the same volume
+  portal_postgres_data:

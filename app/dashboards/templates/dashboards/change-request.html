@@ -1,0 +1,662 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% load itsm_custom_tags %}
+{% block extrastyle %}
+  <link rel="stylesheet"
+        href="{% static 'assets/css/plugins/style.css' %}"
+        xmlns="http://www.w3.org/1999/html">
+  <link rel="stylesheet"
+        href="{% static 'assets/css/plugins/datatables.min.css' %}">
+  <link rel="stylesheet" href="{% static 'assets/css/connector.css' %}">
+{% endblock extrastyle %}
+{% block content %}
+  <!-- [ Timeline Menu ] start -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+      <div class="collapse navbar-collapse" id="navbarText">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <button type="button"
+                    class="btn btn-outline-primary {% if param == 'All' %}active{% endif %}"
+                    data-toggle="button"
+                    name="change_timeline"
+                    id="all_change">All</button>
+          </li>
+          <li class="nav-item">
+            <button type="button"
+                    class="btn btn-outline-primary {% if param == 'Today' %}active{% endif %}"
+                    data-toggle="button"
+                    name="change_timeline"
+                    id="today_change">Today</button>
+          </li>
+          <li class="nav-item">
+            <button type="button"
+                    class="btn btn-outline-primary {% if param == 'Seven' %}active{% endif %}"
+                    data-toggle="button"
+                    name="change_timeline"
+                    id="seven_days_change">7 Days</button>
+          </li>
+          <li class="nav-item">
+            <div class="btn-group" role="group">
+              <button id="month_dropdown"
+                      type="button"
+                      class="btn btn-outline-primary dropdown-toggle"
+                      data-bs-toggle="dropdown">Year</button>
+              <ul class="dropdown-menu">
+                {% for year in year_data %}
+                  <li class="dropdown-submenu">
+                    <a class="dropdown-item dropdown-toggle"
+                       data-bs-toggle="dropdown"
+                       id="{{ year }}"
+                       href="{% url 'dashboards:change-request' %}?param=Year&year={{ year }}">{{ year }}</a>
+                    <ul class="dropdown-menu dropdown-toggle" aria-labelledby="{{ year }}">
+                      {% for month in chg_month_enums %}
+                        <li>
+                          <a class="dropdown-item"
+                             href="{% url 'dashboards:change-request' %}?param=Months&month={{ month }}&year={{ year }}"
+                             id="{{ month }}">{{ month }}</a>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </li>
+        </ul>
+        <span class="navbar-text" id="date_range">
+          <b>{{ info_title }}</b> {{ from_date }} {{ middle_symbol }} {{ to_date }}
+        </span>
+      </div>
+    </div>
+  </nav>
+  <div class="container">
+    <br>
+  </div>
+  <!-- [ Timeline Menu ] end -->
+  <!-- [ Incidents Dashboard ] start -->
+  <div class="row">
+    <!-- [ Incidents Information's ] start -->
+    <div class="col-md-6 col-xl-2">
+      <div class="card bg-c-blue order-card">
+        <div class="card-body">
+          <h6 class="text-white">Total Changes</h6>
+          <h2 class="text-end text-white">
+            <i class="feather icon-bookmark float-start"></i><span>
+              <a class="text-white" id="total_change_btn" href="#">{{ total_change_count }}</a>
+            </span>
+          </h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-2">
+      <div class="card bg-c-green order-card">
+        <div class="card-body">
+          <h6 class="text-white">Open Changes</h6>
+          <h2 class="text-end text-white">
+            <i class="feather icon-anchor float-start"></i><span>
+              <a class="text-white" id="open_change_btn" href="#">{{ open_change_count }}</a>
+            </span>
+          </h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+      <div class="card bg-c-yellow order-card">
+        <div class="card-body">
+          <h6 class="text-white">Scheduled Changes</h6>
+          <h2 class="text-end text-white">
+            <i class="feather icon-activity float-start"></i><span>
+              <a class="text-white" id="in_progress_change_btn" href="#">{{ scheduled_change_count }}</a>
+            </span>
+          </h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+      <div class="card bg-c-red order-card">
+        <div class="card-body">
+          <h6 class="text-white">Implemented Changes</h6>
+          <h2 class="text-end text-white">
+            <i class="feather icon-bell float-start"></i><span>
+              <a class="text-white" id="on_hold_change_btn" href="#">{{ implement_change_count }}</a>
+            </span>
+          </h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-2">
+      <div class="card bg-c-purple order-card">
+        <div class="card-body">
+          <h6 class="text-white">Closed Changes</h6>
+          <h2 class="text-end text-white">
+            <i class="feather icon-award float-start"></i><span>
+              <a class="text-white" id="closed_change_btn" href="#">{{ closed_change_count }}</a>
+            </span>
+          </h2>
+        </div>
+      </div>
+    </div>
+    <!-- [ Incidents Information's ] end -->
+    <!-- [ Incidents Statistics ] start -->
+    <div class="col-md-12 col-xl-6">
+      <div class="card">
+        <div class="card-header">
+          <h5>Change Request grouped - Based on priority status</h5>
+        </div>
+        <div class="card-body ps-0 pb-0">
+          <div id="change-priority-bar-chart"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-12 col-xl-6">
+      <div class="card">
+        <div class="card-header">
+          <h5>Change Request Category</h5>
+        </div>
+        <div class="card-body">
+          <div id="change-category-bar-chart"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-6 col-md-12">
+      <div class="card comp-card">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col">
+              <h6 class="m-b-20">Open Change for more than 30 days</h6>
+              <h3 class="text-c-blue">{{ open_change_thirty_days_count }}</h3>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-eye badge-light-primary"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-6 col-md-12">
+      <div class="card comp-card">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col">
+              <h6 class="m-b-20">Unassigned</h6>
+              <h3 class="text-c-red">
+                <a id="unassigned_incidents_btn" href="#">{{ unassigned_change_count }}</a>
+              </h3>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-envelope badge-light-info"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- [ Incidents Statistics ] end -->
+    <!-- [ incidents-table ] start -->
+    <div class="col-xl-12 col-md-12">
+      <div class="card table-card">
+        <div class="card-block table-border-style">
+          <div class="table-responsive">
+            <table class="table table-striped" id="change-dt-filter" style="width: 100%">
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- [ incidents-table ] end -->
+  </div>
+  <!-- [ Incidents Dashboard ] end -->
+{% endblock content %}
+{% block extra_js %}
+  <script src="{% static 'assets/js/plugins/apexcharts.min.js' %}"></script>
+  <script src="{% static 'assets/js/plugins/jquery-3.6.4.min.js' %}"></script>
+  <script src="{% static 'assets/js/plugins/datatables.min.js' %}"></script>
+  <!-- custom-chart js -->
+  <script>
+    $(document).ready(function() {
+      // takes value from clicked button and sends it to the view
+      // removes the need to hard code the parameters in the menu, preventing accordion collapse
+      $('.nav-item button').on("click", function() {
+        let timeRangeValue = $(this).html();
+        if (timeRangeValue == "7 Days") {
+          timeRangeValue = "Seven"
+        }
+
+        location.href = location.origin + "{{ refresh_url }}" + "?param=" + timeRangeValue;
+      });
+    });
+
+<!--    [ change-category-bar-chart ] start-->
+    (function () {
+        var options = {
+            chart: {
+                height: 350,
+                type: 'bar',
+                stacked: true,
+                stackType: '100%',
+                toolbar: {
+                    tools: {
+                        download: false
+                    }
+                }
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: true,
+                },
+            },
+            colors: ["#4099ff", "#00bcd4", "#0e9e4a", "#FFB64D", "#FF5370"],
+            stroke: {
+                width: 1,
+                colors: ['#fff']
+            },
+            series: [{
+                name: 'Open',
+                data: {{ chg_category_open_values }}
+            }, {
+                name: 'Scheduled',
+                data: {{ chg_category_scheduled_values }}
+            }, {
+                name: 'Closed',
+                data: {{ chg_category_closed_values }}
+            }, {
+                name: 'Unassigned',
+                data: {{ chg_category_unassigned_values }}
+            }],
+            xaxis: {
+                categories: {{ chg_category_values|safe }},
+            },
+
+            tooltip: {
+                y: {
+                    formatter: function(val) {
+                        return val + " change request"
+                    }
+                }
+            },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shade: 'light',
+                    type: "horizontal",
+                    shadeIntensity: 0.25,
+                    inverseColors: true,
+                    opacityFrom: 0.9,
+                    opacityTo: 1,
+                    stops: [0, 50]
+                },
+            },
+            legend: {
+                position: 'top',
+                horizontalAlign: 'center',
+                offsetX: 40
+            }
+        }
+        var chart = new ApexCharts(
+            document.querySelector("#change-category-bar-chart"),
+            options
+        );
+        chart.render();
+    })();
+<!--    [ change-category-bar-chart ] end-->
+<!--    [ change-priority-bar-chart ] start-->
+    (function () {
+        var options = {
+            chart: {
+                height: 350,
+                type: 'bar',
+                toolbar: {
+                    tools: {
+                        download: false
+                    }
+                }
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '55%',
+                    endingShape: 'rounded'
+                },
+            },
+            dataLabels: {
+                enabled: false
+            },
+            colors: ["#0e9e4a", "#4099ff", "#FF5370", "#000000"],
+            stroke: {
+                show: true,
+                width: 2,
+                colors: ['transparent']
+            },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shade: 'light',
+                    type: "vertical",
+                    shadeIntensity: 0.25,
+                    inverseColors: true,
+                    opacityFrom: 1,
+                    opacityTo: 0.7,
+                    stops: [50, 100]
+                },
+            },
+            series: [{
+                name: 'Open',
+                data: {{ chart_open_chg_priority_count|safe }}
+            }, {
+                name: 'Scheduled',
+                data: {{ chart_scheduled_chg_priority_count|safe }}
+            }, {
+                name: 'Closed',
+                data: {{ chart_closed_chg_priority_count|safe }}
+            }, {
+                name: 'Unassigned',
+                data: {{ chart_unassigned_chg_priority_count|safe }}
+            }],
+            xaxis: {
+                categories: {{ chg_priority_groups|safe }}
+            },
+            yaxis: {
+                title: {
+                    text: 'Change Request Count'
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: function(val) {
+                        return val + " change request"
+                    }
+                }
+            }
+        }
+        var chart = new ApexCharts(
+            document.querySelector("#change-priority-bar-chart"),
+            options
+        );
+        chart.render();
+    })();
+<!--    [ change-priority-bar-chart ] end-->
+<!--    [ change-datatable ] start-->
+        function format_date(date){
+          var date_convert = new Date(date);
+          var options = { year: 'numeric', month: 'long', day: 'numeric' };
+          var date_format = new Intl.DateTimeFormat('en-US', options);
+          return date_format.format(date_convert)
+        }
+
+        function first_letter_capitalize(string){
+          var string_capitalize = string.charAt(0).toUpperCase() + string.slice(1);
+          return string_capitalize.toString();
+        }
+
+        let incTable = $('#change-dt-filter').DataTable({
+          processing: true,
+          responsive: true,
+          ordering: true,
+          serverSide:true,
+          ajax: {
+              "type": "GET",
+              "url" : "{% url 'dashboards:ajax_change_datatable' %}",
+              "contentType": "application/json",
+              "headers": {
+                  "X-CSRTToken": "{{ csrf_token }}"
+              },
+              "error": function (xhr, error, thrown) {
+                  alert("Error occurred:\n" + xhr.status + ": " + xhr.statusText);
+              }
+          },
+          deferRender: true,
+          columns: [
+              {
+                  title: "Number",
+                  data: 'number',
+                  searchable: true,
+                  orderable: true,
+              },
+              {
+                  title: "Opened",
+                  data: 'opened_at',
+                  render: function(data){
+                    return format_date(data);
+                  },
+                  searchable: true,
+                  orderable: true,
+              },
+              {
+                  title: "Short Description",
+                  data: 'short_description',
+                  searchable: true,
+                  orderable: true,
+              },
+              {
+                  title: "Priority",
+                  data: 'priority',
+                  render: function(data){
+                    if(data==1){
+                      return "Critical";
+                    } else if(data==2){
+                      return "High";
+                    } else if(data==3){
+                      return "Moderate";
+                    } else if(data==4){
+                      return "Low";
+                    } else if(data==5){
+                      return "Planning";
+                    }
+                  },
+                  searchable: true,
+                  orderable: true,
+              },
+              {
+                  title: "State",
+                  data: 'state',
+                  render: function(data){
+                    if(data==-5){
+                      return "New";
+                    } else if(data==-4){
+                      return "Assess";
+                    } else if(data==-3){
+                      return "Authorize";
+                    } else if(data==-2){
+                      return "Scheduled";
+                    } else if(data==-1){
+                      return "Implement";
+                    } else if(data==0){
+                      return "Review";
+                    } else if(data==3){
+                      return "Closed";
+                    } else if(data==4){
+                      return "Canceled";
+                    }
+                  },
+                  searchable: true,
+                  orderable: true,
+              },
+              {
+                  title: "Category",
+                  data: 'category',
+                  render: function(data){
+                    if(data){
+                      return first_letter_capitalize(data);
+                    } else {
+                      return "";
+                    }
+                  },
+                  searchable: true,
+                  orderable: true,
+              },
+          ]
+        });
+
+    let searchParams = new URLSearchParams(window.location.search);
+    let paramsValue = searchParams.get('param');
+    let month_value = searchParams.get('month');
+    let year_value = searchParams.get('year');
+    let day_value = searchParams.get('day');
+
+    if (paramsValue == "All"){
+      $("#all_change").addClass("active");
+    } else if (paramsValue == "Today"){
+      $("#today_change").addClass("active");
+    } else if (paramsValue == "Seven"){
+      $("#seven_days_change").addClass("active");
+    }
+
+    if (paramsValue == "All") {
+      $("#total_change_btn").click(function(e){
+          incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}").load();
+       });
+      $("#open_change_btn").click(function(e){
+          incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}?state=-5&day="+paramsValue).load();
+       });
+      $("#in_progress_change_btn").click(function(e){
+          incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}?state=-2&day="+paramsValue).load();
+       });
+      $("#on_hold_change_btn").click(function(e){
+          incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}?state=-1&day="+paramsValue).load();
+       });
+      $("#closed_change_btn").click(function(e){
+          incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}?state=3&day="+paramsValue).load();
+       });
+      $("#unassigned_change_btn").click(function(e){
+        incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}?day="+paramsValue+"&filter_param=unassigned").load();
+      });
+    } else if (paramsValue == "Today" || paramsValue == "Seven") {
+      $(document).ready(function() {
+        incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}?day="+paramsValue).load();
+      });
+      $("#total_change_btn").click(function(e){
+          incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}?day="+paramsValue).load();
+       });
+      $("#open_change_btn").click(function(e){
+          incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}?state=-5&day="+paramsValue).load();
+       });
+      $("#in_progress_change_btn").click(function(e){
+          incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}?state=-2&day="+paramsValue).load();
+       });
+      $("#on_hold_change_btn").click(function(e){
+          incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}?state=-1&day="+paramsValue).load();
+       });
+      $("#closed_change_btn").click(function(e){
+          incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}?state=3&day="+paramsValue).load();
+       });
+      $("#unassigned_change_btn").click(function(e){
+        incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}?day="+paramsValue+"&filter_param=unassigned").load();
+      });
+    } else if (paramsValue == "Months" || paramsValue == "Year") {
+      $(document).ready(function() {
+        incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}?day="+paramsValue+"&month="+month_value+"&year="+year_value).load();
+      });
+      $("#total_change_btn").click(function(e){
+          incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}?day="+paramsValue+"&month="+month_value+"&year="+year_value).load();
+       });
+      $("#open_change_btn").click(function(e){
+          incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}?state=-5&day="+paramsValue+"&month="+month_value+"&year="+year_value).load();
+       });
+      $("#in_progress_change_btn").click(function(e){
+          incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}?state=-2&day="+paramsValue+"&month="+month_value+"&year="+year_value).load();
+       });
+      $("#on_hold_change_btn").click(function(e){
+          incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}?state=-1&day="+paramsValue+"&month="+month_value+"&year="+year_value).load();
+       });
+      $("#closed_change_btn").click(function(e){
+          incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}?state=3&day="+paramsValue+"&month="+month_value+"&year="+year_value).load();
+       });
+      $("#unassigned_change_btn").click(function(e){
+        incTable.ajax.url("{% url 'dashboards:ajax_change_datatable' %}?day="+paramsValue+"&filter_param=unassigned&month="+month_value+"&year="+year_value).load();
+      });
+    }
+<!--    [ change-datatable ] end-->
+<!--    [ incidents values donuts ] start-->
+    (function () {
+        var options = {
+            chart: {
+                height: 150,
+                type: 'donut',
+            },
+            dataLabels: {
+                enabled: false
+            },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '75%'
+                    }
+                }
+            },
+            labels: ['Unassigned', 'Overdue'],
+            series: [{{unassigned_incidents_count}}, {{open_incidents_thirty_days_count}}],
+            legend: {
+                show: false
+            },
+            tooltip: {
+                theme: 'dark'
+            },
+            grid: {
+                padding: {
+                    top: 20,
+                    right: 0,
+                    bottom: 0,
+                    left: 0
+                },
+            },
+            colors: ["#2ed8b6", "#4680ff"],
+            fill: {
+                opacity: [1, 1]
+            },
+            stroke: {
+                width: 0,
+            }
+        }
+        let incidents_chart_1 = document.querySelector("#incidents-chart-1");
+        if ( incidents_chart_1 ) {
+            var chart = new ApexCharts(incidents_chart_1, options);
+            chart.render();
+        }
+        var options1 = {
+            chart: {
+                height: 150,
+                type: 'donut',
+            },
+            dataLabels: {
+                enabled: false
+            },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '75%'
+                    }
+                }
+            },
+            labels: ['NotUpdated', 'Older'],
+            series: [{{ incident_not_updated_seven_days_count }}, {{ older_incidents_count }}],
+            legend: {
+                show: false
+            },
+            tooltip: {
+                theme: 'dark'
+            },
+            grid: {
+                padding: {
+                    top: 20,
+                    right: 0,
+                    bottom: 0,
+                    left: 0
+                },
+            },
+            colors: ["#2ed8b6", "#FF5370"],
+            fill: {
+                opacity: [1, 1]
+            },
+            stroke: {
+                width: 0,
+            }
+        }
+        let incident_chart_2 = document.querySelector("#incident-chart-2");
+        if ( incident_chart_2 ) {
+            var chart = new ApexCharts(incident_chart_2, options1);
+            chart.render();
+        }
+    })();
+<!--    [ incidents values donuts ] end-->
+  </script>
+{% endblock extra_js %}

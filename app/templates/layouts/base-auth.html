@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+  <head>
+    {% include 'includes/head.html' %}
+    {% block extrastyle %}
+    {% endblock extrastyle %}
+    <!-- vendor css -->
+    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
+  </head>
+  <body class="{% block body %}{% endblock body %}">
+    {% block content %}
+    {% endblock content %}
+    <!-- Required Js -->
+    <script src="{% static 'assets/js/plugins/popper.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/bootstrap.min.js' %}"></script>
+    {% block extra_js %}
+    {% endblock extra_js %}
+    {% block fixed_plugin %}
+      {% include 'includes/menu-settings.html' %}
+    {% endblock fixed_plugin %}
+  </body>
+</html>

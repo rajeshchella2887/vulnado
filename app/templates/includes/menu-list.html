@@ -1,0 +1,157 @@
+{% load static %}
+<ul class="nav pcoded-inner-navbar ">
+  {#  SECTION: default #}
+  <li class="nav-item pcoded-menu-caption">
+    <label></label>
+  </li>
+  {% if ntt_perms.ntt_dashboard %}
+    <li class="nav-item pcoded-hasmenu">
+      <a href="#" class="nav-link">
+        <span class="pcoded-micon"><i class="feather icon-home"></i></span>
+        <span class="pcoded-mtext">Dashboard</span>
+      </a>
+      <ul class="pcoded-submenu">
+        {% if ntt_perms.ntt_dashboard_compliance %}
+          <li>
+            <a href="{% url 'dashboards:compliance-management' %}">Compliance</a>
+          </li>
+        {% endif %}
+        {% if ntt_perms.ntt_dashboard_patch_management %}
+          <li>
+            <a href="#">Patch Management</a>
+          </li>
+        {% endif %}
+        {% if ntt_perms.ntt_dashboard_asset_management %}
+          <li>
+            <a href="{% url 'dashboards:asset-management' %}">Asset Management</a>
+          </li>
+        {% endif %}
+        {% if ntt_perms.ntt_dashboard_servicenow %}
+          <li class="pcoded-hasmenu">
+            <a href="#!" class="">ITSM Dashboard</a>
+            <ul class="pcoded-submenu">
+              <li id="itsm-incidents">
+                <a href="{% url 'dashboards:connectors' %}">Incidents</a>
+              </li>
+              <li id="itsm-problems">
+                <a href="{% url 'dashboards:problem-management' %}">Problem Management</a>
+              </li>
+              <li id="itsm-change">
+                <a href="{% url 'dashboards:change-request' %}">Change Request</a>
+              </li>
+            </ul>
+          </li>
+        {% endif %}
+      </ul>
+    </li>
+  {% endif %}
+  {% if ntt_perms.ntt_service_catalogs %}
+    <li class="nav-item pcoded-hasmenu">
+      <a href="#" class="nav-link"><span class="pcoded-micon"><i class="feather icon-monitor"></i></span><span class="pcoded-mtext">Service Catalogue</span></a>
+      <ul class="pcoded-submenu">
+        {% if ntt_perms.ntt_service_catalogs_providers %}
+          <li class="pcoded-hasmenu">
+            <a href="#!" class="">Providers</a>
+            <ul class="pcoded-submenu ">
+              {% if ntt_perms.ntt_service_catalogs_automation_providers %}
+                <li>
+                  <a href="{% url 'dashboards:providers' %}">Automation</a>
+                </li>
+              {% endif %}
+              {% if ntt_perms.ntt_service_catalogs_itsm_providers %}
+                <li>
+                  <a href="#">ITSM</a>
+                </li>
+              {% endif %}
+              {% if ntt_perms.ntt_service_catalogs_network_providers %}
+                <li>
+                  <a href="#">Network</a>
+                </li>
+              {% endif %}
+            </ul>
+          </li>
+        {% endif %}
+        {% if ntt_perms.ntt_service_catalogs_compliance_management %}
+          <li class="pcoded-hasmenu">
+            <a href="#!" class="">Compliance Management</a>
+            <ul class="pcoded-submenu">
+              {% if ntt_perms.ntt_service_catalogs_ad_hoc_scanning %}
+                <li>
+                  <a href="{% url 'services:form' %}">Ad Hoc Scanning</a>
+                </li>
+              {% endif %}
+              {% if ntt_perms.ntt_service_catalogs_configuration_plan %}
+                <li>
+                  <a href="{% url 'services:configplan' %}">Configuration Plan</a>
+                </li>
+              {% endif %}
+            </ul>
+          </li>
+        {% endif %}
+        {% if ntt_perms.ntt_service_catalogs_patch_management %}
+          <li>
+            <a href="#">Patch Management</a>
+          </li>
+        {% endif %}
+        {% if ntt_perms.ntt_service_catalogs_asset_management %}
+          <li>
+            <a href="#">Asset Management</a>
+          </li>
+        {% endif %}
+      </ul>
+    </li>
+  {% endif %}
+  <li class="nav-item pcoded-hasmenu">
+    <a href="{% url 'services:jobs_list' %}" class="nav-link"><span class="pcoded-micon"><i class="feather icon-cloud"></i></span><span class="pcoded-mtext">Job History</span></a>
+  </li>
+  {% if ntt_perms.ntt_admin %}
+    <li class="nav-item pcoded-hasmenu">
+      <a href="#" class="nav-link"><span class="pcoded-micon"><i class="feather icon-settings"></i></span><span class="pcoded-mtext">Admin</span></a>
+      <ul class="pcoded-submenu">
+        {% if ntt_perms.ntt_admin_groups %}
+          <li>
+            <a href="#">Group</a>
+          </li>
+        {% endif %}
+        {% if ntt_perms.ntt_admin_users %}
+          <li>
+            <a href="{% url 'dashboards:users' %}">User</a>
+          </li>
+        {% endif %}
+        {% if ntt_perms.ntt_admin_authorization %}
+          <li>
+            <a href="{% url 'dashboards:authorization' %}">Authorization</a>
+          </li>
+        {% endif %}
+        {% if ntt_perms.ntt_admin_authentication %}
+          <li>
+            <a href="{% url 'dashboards:authentication' %}">Authentication</a>
+          </li>
+        {% endif %}
+      </ul>
+    </li>
+  {% endif %}
+</ul>
+{% block extra_js %}
+  <script src="{% static 'assets/js/plugins/jquery-3.6.4.min.js' %}"></script>
+  <script>
+  // using jquery to redirect routes, fixing accordion collapse error
+  $(document).ready(function() {
+    $('#itsm-incidents').on("click", function() {
+      event.preventDefault();
+      location.href = location.origin + "/dashboards/connectors/?param=All#";
+    });
+
+    $('#itsm-problems').on("click", function() {
+      event.preventDefault();
+      location.href = location.origin + "/dashboards/problem-management/?param=All#";
+    });
+
+    $('#itsm-change').on("click", function() {
+      event.preventDefault();
+      location.href = location.origin + "/dashboards/change-request/?param=All#";
+    });
+  });
+
+  </script>
+{% endblock extra_js %}

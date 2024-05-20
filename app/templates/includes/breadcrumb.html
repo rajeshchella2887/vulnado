@@ -1,0 +1,26 @@
+<!-- [ breadcrumb ] start -->
+<div class="page-header">
+  <div class="page-block">
+    <div class="row align-items-center">
+      <div class="col-md-12">
+        <div class="page-header-title">
+          <h5 class="m-b-10">{{ segment }}</h5>
+        </div>
+        <ul class="breadcrumb">
+          {% for name, breadcrumb in breadcrumbs %}
+            <li class="breadcrumb-item">
+              <a href="{{ breadcrumb }}">
+                {% if name == 'home' %}
+                  <i class="feather icon-home"></i>
+                {% else %}
+                  {{ name }}
+                {% endif %}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- [ breadcrumb ] end -->

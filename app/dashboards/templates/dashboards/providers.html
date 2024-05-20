@@ -1,0 +1,118 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% block extrastyle %}
+  <link rel="stylesheet" href="{% static 'assets/css/plugins/style.css' %}">
+  <link rel="stylesheet"
+        href="{% static 'assets/css/plugins/datatables.min.css' %}">
+{% endblock extrastyle %}
+{% block content %}
+  <div class="row">
+    <!-- [ basic-table ] start -->
+    <div class="col-xl-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>Providers</h5>
+          <span class="d-block m-t-5">The table below shows all the providers you own.</span>
+        </div>
+        <div class="card-block table-border-style">
+          <a href="{% url 'providers:add-provider' %}"
+             class="btn btn-outline-primary"
+             id="add">Add Provider</a>
+          <div class="table-responsive" style="margin-top: 1rem;">
+            <table class="table" id="provider-table">
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- [ basic-table ] end -->
+  </div>
+  {% include 'providers/modals/delete_provider_modal.html' %}
+{% endblock %}
+{% block extra_js %}
+  <script src="{% static 'assets/js/plugins/jquery-3.6.4.min.js' %}"></script>
+  <script src="{% static 'assets/js/plugins/datatables.min.js' %}"></script>
+  {% include 'elements/advanced_modal.html' %}
+  <script>
+    let providerTable = null;
+    let deleteUrl = null;
+    const onDeleteClickPrompt = (providerDeleteUrl) => {
+      deleteUrl = providerDeleteUrl;
+    };
+
+    $('#confirm-provider-dimiss-btn').click(() => {
+      fetch(deleteUrl, {
+        method: "DELETE",
+        headers: {
+          "X-CSRFToken": "{{ csrf_token }}",
+          "Content-Type": "application/json"
+        },
+      })
+        .then(function (response) {
+          if (response.ok) {
+            console.log("Delete request successful");
+            providerTable.clear().draw();
+          }
+        })
+        .catch(function (error) {
+          console.log("Error:", error);
+        });
+    });
+
+    $(document).ready(() => {
+      providerTable = $('#provider-table').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+          "type": "GET",
+          "url": "{% url 'dashboards:ajax_providers' %}",
+          "headers": {
+            "X-CSRFToken": "{{ csrf_token }}"
+          },
+          "error": function (xhr, error, thrown) {
+            alert("Error occurred:\n" + xhr.status + ": " + xhr.statusText);
+          }
+        },
+        columns: [
+          {
+            title: "Provider Name", data: 'provider_name', "render": function (data, type, row) {
+              return `<a href="${row.grid_url}">${data}</a>`;
+            },
+            searchable: true,
+          },
+          {
+            title: "IP Address/FQDN",
+            data: 'ip_address',
+            searchable: true,
+          },
+          {
+            title: "Type",
+            data: 'type',
+            searchable: true,
+          },
+          {
+            data: null,
+            className: "dt-center editor-edit",
+            orderable: false,
+            searchable: false,
+            render: function (data, type, row) {
+              return `<a href="${row.edit_url}" class="btn  btn-link"><i class="fas fa-pencil-alt" /></a>`;
+            }
+          },
+          {
+            data: null,
+            className: "dt-center editor-delete",
+            orderable: false,
+            searchable: false,
+            render: function (data, type, row) {
+              return '<button type="button" class="btn btn-link" data-pc-animate="fade-in-scale" data-bs-toggle="modal" ' +
+                `data-bs-target="#animateModal" onclick="onDeleteClickPrompt('${row.delete_url}')">` +
+                '<i class="fas fa-trash" /></button>';
+            }
+          }
+
+        ]
+      });
+    });
+  </script>
+{% endblock %}

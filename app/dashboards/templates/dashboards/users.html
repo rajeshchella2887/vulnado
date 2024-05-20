@@ -1,0 +1,284 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% block extrastyle %}
+  <link rel="stylesheet" href="{% static 'assets/css/plugins/style.css' %}">
+  <link rel="stylesheet"
+        href="{% static 'assets/css/plugins/datatables.min.css' %}">
+{% endblock %}
+{% block content %}
+  <div class="row">
+    <!-- [ basic-table ] start -->
+    <div class="col-xl-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>Users</h5>
+          <span class="d-block m-t-5">The table below shows all the users.</span>
+        </div>
+        <div class="card-block table-border-style">
+          {% if "organization_admin" in logged_in_user_groups %}
+            <!-- Allow actions for organization admin -->
+            <a href="{% url 'accounts:create_user' %}"
+               class="btn btn-outline-primary"
+               id="add">Add User</a>
+            <button id="delete-selected-btn" class="btn btn-outline-danger">Delete Selected</button>
+          {% elif "organization_auditor" in logged_in_user_groups %}
+            <!-- Disable actions for organization operator -->
+            <a class="btn btn-outline-secondary disabled"
+               id="add"
+               aria-disabled="true">Add User</a>
+            <button class="btn btn-outline-secondary disabled" aria-disabled="true">Delete Selected</button>
+          {% else %}
+            <a href="{% url 'accounts:create_user' %}"
+               class="btn btn-outline-primary"
+               id="add">Add User</a>
+            <button id="delete-selected-btn" class="btn btn-outline-danger">Delete Selected</button>
+          {% endif %}
+          <div class="table-responsive" style="margin-top: 1rem;">
+            <table class="table" id="user-table">
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- [ basic-table ] end -->
+  </div>
+  {% include 'accounts/modals/delete_user_modal.html' %}
+  {% include 'accounts/modals/prevent_self_user_delete_modal.html' %}
+  {% include 'accounts/modals/delete_multiuser_modal.html' %}
+  {% include 'accounts/modals/no_user_selected_modal.html' %}
+{% endblock %}
+{% block extra_js %}
+  <script src="{% static 'assets/js/plugins/jquery-3.6.4.min.js' %}"></script>
+  <script src="{% static 'assets/js/plugins/datatables.min.js' %}"></script>
+  {% include 'elements/advanced_modal.html' %}
+  <script>
+    let userTable = null;
+    let deleteUrl = null;
+
+    const onDeleteClickPrompt = (username, userDeleteUrl) => {
+        const loggedInUsername = "{{ request.user.username }}";
+        if (username === loggedInUsername) {
+            $('#confirm-self-delete-modal').modal('show');
+        } else {
+            deleteUrl = userDeleteUrl;
+            $('#animateModal').modal('show');
+        }
+    };
+
+    $('#confirm-self-delete-btn').click(() => {
+        $('#confirm-self-delete-modal').modal('hide');
+        deleteSelfUser();
+    });
+
+    $('#confirm-user-dimiss-btn').click(() => {
+      fetch(deleteUrl, {
+        method: "DELETE",
+        headers: {
+          "X-CSRFToken": "{{ csrf_token }}",
+          "Content-Type": "application/json"
+        },
+      })
+        .then(function (response) {
+          if (response.ok) {
+            console.log("Delete request successful");
+            userTable.clear().draw();
+          }
+        })
+        .catch(function (error) {
+          console.log("Error:", error);
+        });
+    });
+
+    $(document).ready(() => {
+        userTable = $('#user-table').DataTable({
+            processing: true,
+            serverSide: true,
+            autoWidth: false,
+            ajax: {
+                "type": "GET",
+                "url": "{% url 'dashboards:ajax_users' %}",
+                "headers": {
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                "error": function (xhr, error, thrown) {
+                    alert("Error occurred:\n" + xhr.status + ": " + xhr.statusText);
+                }
+            },
+        columns: [
+            {
+                title: "Select",
+                data: null,
+                className: "dt-center",
+                orderable: false,
+                render: function (data, type, row) {
+                    let loggedInUsername = "{{ request.user.username }}";
+                    let loggedInUserGroups = "{{ logged_in_user_groups }}";
+                    console.log("group", loggedInUserGroups)
+                    // Check if "organization_auditor" is present in the array
+                    if (loggedInUserGroups.includes("organization_admin")) {
+                        if (row.username === loggedInUsername) {
+                            return '<input type="checkbox" name="selectedUser" value="' + row.id + '" disabled>';
+                        } else {
+                            return '<input type="checkbox" name="selectedUser" value="' + row.id + '">';
+                        }
+                    } else if (loggedInUserGroups.includes("organization_auditor")) {
+                        return '<input type="checkbox" name="selectedUser" value="' + row.id + '" disabled>';
+                    } else {
+                        return '<input type="checkbox" name="selectedUser" value="' + row.id + '">';
+                    }
+                }
+            },
+            {
+                title: "Username",
+                data: 'username',
+                searchable: true,
+            },
+            {
+                title: "Email",
+                data: 'email',
+                searchable: true,
+            },
+            {
+                title: "First Name",
+                data: 'first_name',
+                searchable: true,
+            },
+            {
+                title: "Last Name",
+                data: 'last_name',
+                searchable: true,
+            },
+            {
+                title: "User Type",
+                data: 'is_ldap',
+                searchable: true,
+                render: function (data) {
+                    return data ? "LDAP User" : "Local User";
+                }
+            },
+            {
+                data: null,
+                className: "dt-center editor-edit",
+                orderable: false,
+                searchable: false,
+                render: function (data, type, row) {
+                    let loggedInUserGroups = "{{ logged_in_user_groups }}";
+                    if (loggedInUserGroups.includes("organization_admin")) {
+                        return `<a href="${row.edit_url}" class="btn  btn-link"><i class="fas fa-pencil-alt" /></a>`;
+                    } else if (loggedInUserGroups.includes("organization_auditor")) {
+                        return `<a href="${row.edit_url}" class="btn  btn-link disabled"><i class="fas fa-pencil-alt" /></a>`;
+                    } else {
+                        return `<a href="${row.edit_url}" class="btn  btn-link"><i class="fas fa-pencil-alt" /></a>`;
+                    }
+                }
+            },
+            {
+                data: null,
+                className: "dt-center editor-delete",
+                orderable: false,
+                searchable: false,
+                render: function (data, type, row) {
+                    let loggedInUsername = "{{ request.user.username }}";
+                    let loggedInUserGroups = "{{ logged_in_user_groups }}";
+                    if (loggedInUserGroups.includes("organization_admin")) {
+                        if (row.username === loggedInUsername) {
+                            return '<button class="btn btn-link" disabled><i class="fas fa-trash" /></button>';
+                        } else {
+                            return '<button type="button" class="btn btn-link" data-pc-animate="fade-in-scale" ' +
+                                `onclick="onDeleteClickPrompt('${row.username}', '${row.delete_url}')">` +
+                                '<i class="fas fa-trash" /></button>';
+                        }
+                    } else if (loggedInUserGroups.includes("organization_auditor")) {
+                        return '<button class="btn btn-link" disabled><i class="fas fa-trash" /></button>';
+                    } else {
+                        return '<button class="btn btn-link"><i class="fas fa-trash" /></button>';
+                    }
+                }
+            }
+        ],
+          order: [[1, 'asc']],
+            createdRow: function (row, data, dataIndex) {
+            $(row).find('td').css('vertical-align', 'middle');
+        }
+      });
+    });
+
+    // Function to delete the logged-in user
+    const deleteSelfUser = () => {
+        fetch(deleteUrl, {
+            method: "DELETE",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+                "Content-Type": "application/json"
+            },
+        })
+        .then(function (response) {
+            if (response.ok) {
+                console.log("Delete request successful");
+                userTable.clear().draw();
+            }
+        })
+        .catch(function (error) {
+            console.log("Error:", error);
+        });
+    };
+
+    // Add an event listener for the "Delete Selected" button
+    $('#delete-selected-btn').click(onDeleteSelected);
+
+    function onDeleteSelected() {
+        const selectedUserIds = $('input[name="selectedUser"]:checked').map(function () {
+            return $(this).val();
+        }).get();
+
+        if (selectedUserIds.length === 0) {
+            $('#noUserSelectedModal').modal('show');
+            return;
+        }
+
+        // Show the confirmation modal
+        $('#confirmDeleteModal').modal('show');
+
+        // Add click event for the "Ok" button in the modal
+        $('#confirmDeleteBtn').click(() => {
+            $('#confirmDeleteModal').modal('hide');
+
+            deleteSelectedUsers(selectedUserIds);
+        });
+
+        // Add click event for the "Cancel" button in the modal
+        $('#confirmDeleteCancelBtn').click(() => {
+            $('#confirmDeleteModal').modal('hide');
+        });
+
+        $('.btn-close.btn-close-white').click(() => {
+            $('#confirmDeleteModal').modal('hide');
+        });
+    }
+
+    // Function to delete multiple selected users
+    function deleteSelectedUsers(selectedUserIds) {
+        fetch('{% url "accounts:delete-multiple-users" %}', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': "{{ csrf_token }}",
+            },
+            body: JSON.stringify({user_ids: selectedUserIds}),
+        })
+            .then(response => {
+                if (response.ok) {
+                    console.log("Delete request for selected users successful");
+                    userTable.clear().draw();
+                } else {
+                    console.error("Error deleting selected users");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+    }
+
+
+  </script>
+{% endblock %}

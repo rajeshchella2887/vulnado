@@ -1,0 +1,134 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% load itsm_custom_tags %}
+{% block extrastyle %}
+  <link rel="stylesheet"
+        href="{% static 'assets/css/plugins/style.css' %}"
+        xmlns="http://www.w3.org/1999/html">
+  <link rel="stylesheet"
+        href="{% static 'assets/css/plugins/datatables.min.css' %}">
+  <link rel="stylesheet" href="{% static 'assets/css/connector.css' %}">
+  <style>
+  #iframeContainer {
+     width: 100%;
+     height: 100vh;
+  }
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+  </style>
+{% endblock extrastyle %}
+{% block content %}
+  <div id="iframeContainer">
+    <!-- [ Compliance Management Dashboard ] start -->
+    <iframe id="grafaana_frame"
+            src="https://grafana.pandora.com/d-solo/d0458a56-487e-43c4-9b28-24df6fb4db0f/embed?orgId=1&theme=light&panelId=1"
+            allowfullscreen="allowfullscreen"
+            scrolling="no"></iframe>
+    {% comment %} <iframe id="grafaana_frame" src="https://grafana.dev.pandora.com/d-solo/be9c32de-0c65-4c55-aa3a-21bbfefb7c3f/embed-synapxe?orgId=1&from=1705886233814&to=1705907833814&panelId=2%22" allowfullscreen="allowfullscreen" scrolling="no"></iframe> {% endcomment %}
+    <!-- [ Compliance Management Dashboard ] end -->
+  </div>
+  <!-- [ Timeline Menu ] start -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+      <div class="collapse navbar-collapse" id="navbarText">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <button type="button"
+                    class="btn btn-outline-primary {% if param == 'All' %}active{% endif %}"
+                    data-toggle="button"
+                    name="change_timeline"
+                    id="all_change">All</button>
+          </li>
+          <li class="nav-item">
+            <button type="button"
+                    class="btn btn-outline-primary {% if param == 'Today' %}active{% endif %}"
+                    data-toggle="button"
+                    name="change_timeline"
+                    id="today_change">Today</button>
+          </li>
+          <li class="nav-item">
+            <button type="button"
+                    class="btn btn-outline-primary {% if param == 'Seven' %}active{% endif %}"
+                    data-toggle="button"
+                    name="change_timeline"
+                    id="seven_days_change">7 Days</button>
+          </li>
+          <li class="nav-item">
+            <div class="btn-group" role="group">
+              <button id="month_dropdown"
+                      type="button"
+                      class="btn btn-outline-primary dropdown-toggle"
+                      data-bs-toggle="dropdown">Year</button>
+              <ul class="dropdown-menu">
+                {% for year in year_data %}
+                  <li class="dropdown-submenu">
+                    <a class="dropdown-item dropdown-toggle"
+                       data-bs-toggle="dropdown"
+                       id="{{ year }}"
+                       href="{% url 'dashboards:change-request' %}?param=Year&year={{ year }}">{{ year }}</a>
+                    <ul class="dropdown-menu dropdown-toggle" aria-labelledby="{{ year }}">
+                      {% for month in month_enums %}
+                        <li>
+                          <a class="dropdown-item"
+                             href="{% url 'dashboards:change-request' %}?param=Months&month={{ month }}&year={{ year }}"
+                             id="{{ month }}">{{ month }}</a>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </li>
+        </ul>
+        <span class="navbar-text" id="date_range">
+          <b>{{ info_title }}</b> {{ from_date }} {{ middle_symbol }} {{ to_date }}
+        </span>
+      </div>
+    </div>
+  </nav>
+  <div class="container">
+    <br>
+  </div>
+  <!-- [ Timeline Menu ] end -->
+  <!-- [ Compliance Management Dashboard ] start -->
+  <div class="row">
+    <iframe src="http://10.16.0.112:3000/d-solo/d0458a56-487e-43c4-9b28-24df6fb4db0f/embed?orgId=1&from=1696390891506&to=1696412491506&panelId=1"
+            width="450"
+            height="200"
+            frameborder="0"></iframe>
+  </div>
+  <!-- [ Compliance Management Dashboard ] end -->
+{% endblock content %}
+{% block extra_js %}
+  <script>
+  function adjustIframeSize() {
+    var iframe = document.getElementById('grafaana_frame');
+    var container = document.getElementById('iframeContainer');
+
+    // Set iframe height to 100% of the container's height
+    iframe.style.height = container.clientHeight + 'px';
+    }
+
+    // Adjust the iframe size initially and on window resize
+    adjustIframeSize();
+    window.addEventListener('resize', adjustIframeSize);
+
+  $(document).ready(function() {
+    // takes value from clicked button and sends it to the view
+    // removes the need to hard code the parameters in the menu, preventing accordion collapse
+    $('.nav-item button').on("click", function() {
+      let timeRangeValue = $(this).html();
+      if (timeRangeValue == "7 Days") {
+        timeRangeValue = "Seven"
+      }
+
+      location.href = location.origin + "{{ refresh_url }}" + "?param=" + timeRangeValue;
+    });
+  });
+
+  </script>
+{% endblock extra_js %}

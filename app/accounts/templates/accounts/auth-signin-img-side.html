@@ -1,0 +1,81 @@
+{% extends 'layouts/base-auth.html' %}
+{% load static %}
+{% block content %}
+  <!-- [ signin-img ] start -->
+  <div class="auth-wrapper align-items-stretch aut-bg-img">
+    <div class="flex-grow-1">
+      <div class="h-100 d-md-flex align-items-center auth-side-img">
+        <div class="col-sm-10 auth-content w-auto">
+          <img src="{% static 'assets/images/auth/NTT-auth-logo.png' %}"
+               width="300"
+               height="400"
+               alt=""
+               class="img-fluid">
+          <h1 class="text-white my-4">Welcome Back!</h1>
+          <h4 class="text-white font-weight-normal">Log in to your account and explore the NTT Dashboard!</h4>
+        </div>
+      </div>
+      <div class="auth-side-form">
+        <form method="post" class=" auth-content">
+          {% csrf_token %}
+          <img src="{% static 'assets/images/auth/NTT-auth-logo.png' %}"
+               alt=""
+               class="img-fluid mb-4 d-block d-xl-none d-lg-none">
+          <h3 class="mb-4 f-w-400">Signin</h3>
+          {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}<span class="text-danger d-block mb-3">{{ error }}</span>{% endfor %}
+          {% endif %}
+          <div class="input-group mb-3">
+            <span class="input-group-text"><i class="feather icon-user"></i></span>
+            {{ form.username }}
+          </div>
+          <div class="input-group mb-4">
+            <span class="input-group-text"><i class="feather icon-lock"></i></span>
+            {{ form.password }}
+          </div>
+          <div class="form-group text-left mt-2">
+            <div class="checkbox checkbox-primary d-inline">
+              <input type="checkbox"
+                     name="checkbox-p-1"
+                     id="checkbox-p-1"
+                     onclick="saveCredentials()">
+              <label for="checkbox-p-1" class="cr">Save credentials</label>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-block btn-primary mt-2 mb-0">Login</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script>
+  function saveCredentials() {
+    var username = document.getElementById('id_username').value;
+    var password = document.getElementById('id_password').value;
+    var rememberMe = document.getElementById('checkbox-p-1').checked;
+
+    if (rememberMe) {
+      document.cookie = "username=" + username;
+      document.cookie = "password=" + password;
+    } else {
+      // Clear cookies if "Save credentials" is unchecked
+      document.cookie = "username=; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+      document.cookie = "password=; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    }
+  }
+
+  window.onload = function() {
+    var usernameCookie = getCookie("username");
+    var passwordCookie = getCookie("password");
+
+    if (usernameCookie && passwordCookie) {
+      document.getElementById('id_username').value = usernameCookie;
+      document.getElementById('id_password').value = passwordCookie;
+    }
+  }
+
+  function getCookie(name) {
+    var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    if (match) return match[2];
+  }
+  </script>
+{% endblock content %}

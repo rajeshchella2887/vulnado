@@ -1,0 +1,10 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% load render_bundle from webpack_loader %}
+{% block content %}
+  <body>
+    <div id="details"></div>
+    {% csrf_token %}
+    {% render_bundle 'jobDetails' %}
+  </body>
+{% endblock %}

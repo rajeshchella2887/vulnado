@@ -1,0 +1,37 @@
+<div class="modal fade modal-animate"
+     id="animateModal"
+     tabindex="-1"
+     aria-labelledby="animateModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-dark">
+        <h5 class="modal-title text-white">Delete Provider</h5>
+        <button type=" button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+                aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <h5>
+          This will delete provider
+          <p id="provider-to-delete-id"></p>
+        </h5>
+        <p>
+          <b>Would you like to proceed with this action?</b>
+        </p>
+      </div>
+      <div class="modal-footer">
+        {# NOTE: if you need to more behaviours, you'll need to handle the dismissal and confirmation actions in your template #}
+        <button type="button"
+                class="btn btn-outline-secondary"
+                data-bs-dismiss="modal"
+                id="delete-provider-dimiss-btn">Cancel</button>
+        <button type="button"
+                class="btn btn-primary shadow-2"
+                data-bs-dismiss="modal"
+                id="confirm-provider-dimiss-btn">Ok</button>
+      </div>
+    </div>
+  </div>
+</div>

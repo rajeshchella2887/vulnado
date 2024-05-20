@@ -1,0 +1,98 @@
+{% extends 'layouts/base.html' %}
+{% load humanize %}
+{% load static %}
+{% block extrastyle %}
+  <link rel="stylesheet" href="{% static 'assets/css/catalog-card.css' %}">
+  <link rel="stylesheet" href="{% static 'assets/css/plugins/style.css' %}">
+{% endblock extrastyle %}
+{% block content %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="card">
+        <div class="card-header">
+          <h5>Service Catalogs</h5>
+        </div>
+        <div class="card-block">
+          <div class="row">
+            <div class="col-sm-12 col-lg-4">
+              <div class="row align-items-center">
+                <div class="col-sm-auto">Show</div>
+                <div class="col-sm-auto">
+                  <select class="form-select" id="jobsPerPage">
+                    <option {% if page_size == "10" %}selected{% endif %}>10</option>
+                    <option {% if page_size == "25" %}selected{% endif %}>25</option>
+                    <option {% if page_size == "50" %}selected{% endif %}>50</option>
+                    <option {% if page_size == "100" %}selected{% endif %}>100</option>
+                  </select>
+                </div>
+                <div class="col-sm-auto">Entries</div>
+              </div>
+            </div>
+            <div class="col-sm-12 col-lg-8 d-flex justify-content-end">
+              <form id="searchForm"
+                    class="navbar-form navbar-left col-sm-4"
+                    action=""
+                    method="GET"
+                    role="form">
+                <div class="form-group has-icon">
+                  <input class="form-control" type="text" placeholder="Search" name="search">
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row row-cols-md-3 row-cols-lg-5 g-1 justify-content-start">
+            {% for job in catalogs %}
+              <div class="catalog-card text-center jobs p-3 m-4">
+                <a class="card-select"
+                   href="{% url 'services:launch_job' provider job.template_id %}">
+                  <div class="p-3 m-3">
+                    <img src="{% static 'assets/images/ansible-icon-red.svg' %}"
+                         width="50"
+                         height="60"
+                         alt="Ansible Tower" />
+                    <p>{{ job.name|upper }}</p>
+                    <p class="tag">{{ job.type }}</p>
+                    {{ job.description }}
+                    <small class="text-muted text-left" style="padding: 5px;">{{ job.last_job_run|naturaltime }}</small>
+                  </div>
+                </a>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        <hr>
+        <nav aria-label="Page navigation example">
+          <ul class="pagination justify-content-center">
+            <li class="page-item {% if not page_obj.previous %}disabled{% endif %}">
+              <a class="page-link"
+                 href="?page={{ previous_page_num }}{% if page_size %}&page_size={{ page_size }}{% endif %}{% if search %}&search={{ search }}{% endif %}"
+                 tabindex="-1">Previous</a>
+            </li>
+            {% for page_num in page_range %}
+              <li class="page-item {% if page_num == current_page_num %}active{% endif %}">
+                <a class="page-link"
+                   href="?page={{ page_num }}{% if page_size %}&page_size={{ page_size }}{% endif %}{% if search %}&search={{ search }}{% endif %}">{{ page_num }}</a>
+              </li>
+            {% endfor %}
+            <li class="page-item {% if next_page_num > last_page_num %}disabled{% endif %}">
+              <a class="page-link"
+                 href="?page={{ next_page_num }}{% if page_size %}&page_size={{ page_size }}{% endif %}{% if search %}&search={{ search }}{% endif %}">Next</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+{% block extra_js %}
+  <script>
+    $('#jobsPerPage').on('change', () => {
+        let currentRowValue = $('#jobsPerPage').val();
+
+        location.href = location.origin + "{{ refresh_url_paginate }}" + "?page_size=" + currentRowValue;
+    });
+
+  </script>
+{% endblock %}

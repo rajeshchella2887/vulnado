@@ -1,0 +1,48 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% load itsm_custom_tags %}
+{% block extrastyle %}
+  <link rel="stylesheet"
+        href="{% static 'assets/css/plugins/style.css' %}"
+        xmlns="http://www.w3.org/1999/html">
+  <link rel="stylesheet"
+        href="{% static 'assets/css/plugins/datatables.min.css' %}">
+  <link rel="stylesheet" href="{% static 'assets/css/connector.css' %}">
+  <style>
+  #iframeContainer {
+     width: 100%;
+     height: 100vh;
+  }
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+  </style>
+{% endblock extrastyle %}
+<!--{% block breadcrumbs %}{% endblock breadcrumbs %}-->
+{% block content %}
+  <div id="iframeContainer">
+    <!-- [ Compliance Management Dashboard ] start -->
+    <iframe id="grafaana_frame"
+            src="https://grafana.pandora.com/d-solo/aebffaef-dcb6-4f41-8033-efd748e366e7/embed-asset?orgId=1&theme=light&panelId=1"
+            allowfullscreen="allowfullscreen"
+            scrolling="no"></iframe>
+    <!-- [ Compliance Management Dashboard ] end -->
+  </div>
+{% endblock content %}
+{% block extra_js %}
+  <script>
+  function adjustIframeSize() {
+    var iframe = document.getElementById('grafaana_frame');
+    var container = document.getElementById('iframeContainer');
+
+    // Set iframe height to 100% of the container's height
+    iframe.style.height = container.clientHeight + 'px';
+    }
+
+    // Adjust the iframe size initially and on window resize
+    adjustIframeSize();
+    window.addEventListener('resize', adjustIframeSize);
+  </script>
+{% endblock extra_js %}

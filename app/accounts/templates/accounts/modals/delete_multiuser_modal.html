@@ -1,0 +1,34 @@
+<!-- Confirmation Modal -->
+<div class="modal fade modal-animate"
+     id="confirmDeleteModal"
+     tabindex="-1"
+     aria-labelledby="confirmDeleteModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-dark">
+        <h5 class="modal-title text-white">Delete User</h5>
+        <button type="button"
+                class="btn-close btn-close-white"
+                data-dismiss="modal"
+                aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <h5>
+          This will delete user(s): <span id="multi-user-to-delete-id"></span>
+        </h5>
+        <p>
+          <b>Would you like to proceed with this action?</b>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <!-- NOTE: if you need to handle more behaviors, you'll need to modify the dismissal and confirmation actions in your template -->
+        <button type="button"
+                class="btn btn-outline-secondary"
+                data-dismiss="modal"
+                id="confirmDeleteCancelBtn">Cancel</button>
+        <button type="button" class="btn btn-primary shadow-2" id="confirmDeleteBtn">Ok</button>
+      </div>
+    </div>
+  </div>
+</div>

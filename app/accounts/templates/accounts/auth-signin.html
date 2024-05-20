@@ -1,0 +1,47 @@
+{% extends 'layouts/base-auth.html' %}
+{% load static %}
+{% block content %}
+  <!-- [ auth-signin ] start -->
+  <div class="auth-wrapper">
+    <div class="auth-content">
+      <div class="card">
+        <div class="row align-items-center text-center">
+          <div class="col-md-12">
+            <form method="post" class="card-body">
+              {% csrf_token %}
+              <img src="{% static 'assets/images/auth/NTT-logo.png' %}"
+                   alt=""
+                   class="img-fluid">
+              <h4 class="mb-3 f-w-400">Signin</h4>
+              {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}<span class="text-danger d-block mt-2 mb-3">{{ error }}</span>{% endfor %}
+              {% endif %}
+              <div class="input-group mb-3">
+                <span class="input-group-text"><i class="feather icon-user"></i></span>
+                {{ form.username }}
+              </div>
+              <div class="input-group mb-4">
+                <span class="input-group-text"><i class="feather icon-lock"></i></span>
+                {{ form.password }}
+              </div>
+              <div class="form-group text-left mt-2">
+                <div class="checkbox checkbox-primary d-inline">
+                  <input type="checkbox"
+                         name="checkbox-fill-1"
+                         id="checkbox-fill-a1"
+                         checked="">
+                  <label for="checkbox-fill-a1" class="cr">Save credentials</label>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-block btn-primary mt-2 mb-4">Signin</button>
+              {#              <p class="mb-2 text-muted">Forgot password? <a href="{% url 'password_reset_v1' %}"#}
+              {#                                                             class="f-w-400">Reset</a></p>#}
+              {#              <p class="mb-0 text-muted">Don’t have an account? <a href="{% url 'register_v1' %}"#}
+              {#                                                                   class="f-w-400">Signup</a></p>#}
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}

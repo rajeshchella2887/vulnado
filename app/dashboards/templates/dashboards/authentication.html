@@ -1,0 +1,49 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% block extrastyle %}
+  <link rel="stylesheet" href="{% static 'assets/css/plugins/style.css' %}">
+  <link rel="stylesheet"
+        href="{% static 'assets/css/plugins/datatables.min.css' %}">
+{% endblock extrastyle %}
+{% block content %}
+  <div class="row">
+    <!-- [ basic-table ] start -->
+    <div class="col-xl-3 col-lg-12 task-detail-right">
+      <div class="card">
+        <div class="card-header">
+          <h5>Authentication Settings</h5>
+        </div>
+        <div class="card-body task-details">
+          <ul class="pcoded-submenu">
+            <li>
+              <a href="#" id="ldap-settings-entrance-link">LDAP</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-9">
+      <div class="card" id="authentication-settings"></div>
+    </div>
+    <!-- [ basic-table ] end -->
+  </div>
+{% endblock %}
+{% block extra_js %}
+  <script src="{% static 'assets/js/plugins/jquery-3.6.4.min.js' %}"></script>
+  <script>
+      const loadLdapSettings = () => {
+          $.get("{% url 'accounts:ldap_settings' %}", (templateData) => {
+              $("#authentication-settings").html(templateData);
+          });
+      }
+
+      $(document).ready(() => {
+          $("#ldap-settings-entrance-link").on('click', (event) => {
+              event.preventDefault();
+              loadLdapSettings();
+          });
+      });
+
+
+  </script>
+{% endblock %}

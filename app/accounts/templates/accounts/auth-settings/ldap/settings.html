@@ -1,0 +1,96 @@
+{% load static %}
+<div class="card-header">
+  <h5>LDAP</h5>
+  <span class="d-block m-t-5">The table below shows all the ldap settings you own.</span>
+</div>
+<div class="card-block table-border-style">
+  <a href="{% url 'accounts:add_ldap_settings' %}"
+     class="btn btn-outline-primary"
+     id="add">Add Settings</a>
+  <div class="table-responsive" style="margin-top: 1rem;">
+    <table class="table" id="settings-table">
+    </table>
+  </div>
+</div>
+{% include 'accounts/auth-settings/ldap/modals/delete-ldap-settings-modal.html' %}
+<script src="{% static 'assets/js/plugins/jquery-3.6.4.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/datatables.min.js' %}"></script>
+<script>
+    let settingsTable = $('#settings-table').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            "type": "GET",
+            "url": "{% url 'accounts:ajax_ldap_settings' %}",
+            "headers": {
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            "error": function (xhr, error, thrown) {
+                alert("Error occurred:\n" + xhr.status + ": " + xhr.statusText);
+            }
+        },
+        columns: [
+            {
+                title: "Name",
+                data: 'name',
+                searchable: true,
+            },
+            {
+                title: "Key",
+                data: 'key',
+                searchable: true,
+            },
+            {
+                title: "Active",
+                data: 'active',
+                searchable: false,
+            },
+            {
+                data: null,
+                className: "dt-center editor-edit",
+                orderable: false,
+                searchable: false,
+                render: function (data, type, row) {
+                    return `<a href="${row.edit_url}" class="btn  btn-link"><i class="fas fa-pencil-alt" /></a>`;
+                }
+            },
+            {
+                data: null,
+                className: "dt-center editor-delete",
+                orderable: false,
+                searchable: false,
+                render: function (data, type, row) {
+                    return '<button type="button" class="btn btn-link" data-pc-animate="fade-in-scale" data-bs-toggle="modal" ' +
+                        `data-bs-target="#animateModal" onclick="onDeleteClickPrompt('${row.delete_url}')">` +
+                        '<i class="fas fa-trash" /></button>';
+                }
+            }
+        ]
+    });
+
+    let deleteUrl = null;
+    const onDeleteClickPrompt = (ldapSettingsDeleteUrl) => {
+      deleteUrl = ldapSettingsDeleteUrl;
+    };
+
+    $('#confirm-ldap-settings-dismiss-btn').click(() => {
+      fetch(deleteUrl, {
+        method: "DELETE",
+        headers: {
+          "X-CSRFToken": "{{ csrf_token }}",
+          "Content-Type": "application/json"
+        },
+      })
+        .then(function (response) {
+          if (response.ok) {
+            console.log("Delete request successful");
+            settingsTable.clear().draw();
+          }
+        })
+        .catch(function (error) {
+          console.log("Error:", error);
+        });
+    });
+
+
+</script>

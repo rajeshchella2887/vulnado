@@ -1,0 +1,45 @@
+  .tag {
+    font-weight: 100;
+    background-color: var(--bg-tag, #ebebeb);
+    border-radius: 5px;
+    color: var(--fg-tag, #606060);
+    font-size: 10px;
+    margin: 5px 20px;
+    padding: 3px 9px;
+    line-height: 14px;
+    word-break: keep-all;
+    display: inline-flex;
+}
+.left-aligned-tag {
+    font-weight: 100;
+    background-color: var(--bg-tag, #ebebeb);
+    border-radius: 5px;
+    color: var(--fg-tag, #606060);
+    font-size: 10px;
+    margin: 5px 20px;
+    padding: 3px 9px;
+    line-height: 14px;
+    word-break: keep-all;
+    display: inline-flex;
+}
+
+
+.placeholder-paragraph {
+    background-repeat: repeat-y;
+    background-image: linear-gradient(100deg, rgba(var(--placeholder-shimmer-color, 255, 255, 255), 0), rgba(var(--placeholder-shimmer-color, 255, 255, 255), 0.5) 50%, rgba(var(--placeholder-shimmer-color, 255, 255, 255), 0) 80%), linear-gradient(var(--placeholder-text-color, rgba(69, 85, 101, 0.15)) 14px, transparent 0), linear-gradient(var(--placeholder-text-color, rgba(69, 85, 101, 0.15)) 14px, transparent 0), linear-gradient(var(--placeholder-text-color, rgba(69, 85, 101, 0.15)) 14px, transparent 0), linear-gradient(var(--placeholder-text-color, rgba(69, 85, 101, 0.15)) 14px, transparent 0);
+    /* line 4 */
+    background-size: 20% 120px, 24% 120px, 95% 120px, 91% 120px, 97% 120px;
+    /* line 4 */
+    background-position: -20% 0, 0 0, 0 21px, 0 42px, 0 63px;
+    /* line 4 */
+    -webkit-animation: placeholderParagraphShimmer 1s infinite;
+    animation: placeholderParagraphShimmer 1s infinite;
+    height: 100px;
+    margin-bottom: 2rem;
+
+    @keyframes placeholderParagraphShimmer {
+        100% {
+            transform: translateX(100%);
+        }
+    }
+}

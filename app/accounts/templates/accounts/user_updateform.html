@@ -1,0 +1,21 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% block extrastyle %}
+  <link rel="stylesheet" href="{% static 'assets/css/catalog-card.css' %}">
+  <link rel="stylesheet" href="{% static 'assets/css/plugins/style.css' %}">
+{% endblock extrastyle %}
+{% block content %}
+  <div class="col-sm-12">
+    <div class="card">
+      <div class="card-header">
+        <span style="font-size: 30px;text-align: center;">USER FORM</span>
+        <br>
+        <br>
+        {% if messages %}
+          {% for message in messages %}<div class="alert alert-{{ message.tags }}" role="alert">{{ message }}</div>{% endfor %}
+        {% endif %}
+      </div>
+      <div class="card-body">{% include 'forms/generic_form.html' with form=form %}</div>
+    </div>
+  </div>
+{% endblock %}

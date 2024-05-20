@@ -1,0 +1,227 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% block extrastyle %}
+  <link rel="stylesheet" href="{% static 'assets/css/launch-job.css' %}">
+  <link rel="stylesheet" href="{% static 'assets/css/plugins/style.css' %}">
+{% endblock extrastyle %}
+{% block content %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="row">
+            <div class="col-6" style="padding: 30px;">
+              <h3>
+                {{ name|upper }}
+                {% if type %}<span class="tag">{{ type }}</span>{% endif %}
+              </h3>
+              <p class="accent-heading">{{ job.description|capfirst }}</p>
+              {% include 'forms/generic_form.html' %}
+            </div>
+            <div class="col-6" id="loader-col" style="padding: 30px;">
+              {% if status %}
+                <h3>
+                  Job {{ job_id }}
+                  <button id="refresh" type="button" class="btn feather icon-refresh-cw"></button>
+                </h3>
+                <h5 id="status" class="btn btn-warning">{{ status }}</h5>
+                <div id="outputDisplay" style="max-height: 100%"></div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block extra_js %}
+  <script>
+  const stdouturl = "{% url 'services:stdout' %}";
+  const jobStatusUrl = "{% url 'services:job_status' %}";
+
+  const loadingPlaceholder =
+  '<div id="loader" class="placeholder-paragraph" style="height: 600px;" />';
+
+  let jobStatus;
+  const loadJobStatus = (successHooks) => {
+    return $.ajax({
+      url: jobStatusUrl,
+      type: 'get',
+      data: {
+        status_url: '{{ status_url }}',
+        template_id: '{{ template_id }}',
+      },
+      dataType: 'json',
+      success: (data) => {
+        successHooks(data);
+      },
+    });
+  };
+
+  const updateJobStatusPill = (data) => {
+    $('#status').text(data.status);
+    $('#status').removeAttr('class');
+
+    switch (data.status) {
+      case 'Successful':
+        $('#status').addClass('btn btn-success');
+        $('#loader-col').find('#loader').remove();
+        break;
+      case 'Failed':
+        $('#status').addClass('btn-danger text-danger');
+        $('#loader-col').find('#loader').remove();
+        break;
+      case 'Pending':
+        $('#status').addClass('btn btn-warning');
+        break;
+      case 'Running':
+        $('#status').addClass('btn btn-info');
+        $('#status').html(data.status);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const setJobStatus = (data) => {
+    jobStatus = data.status;
+  };
+
+  const loadStdOut = (beforeSendHook, successHooks) => {
+    $.ajax({
+      url: stdouturl,
+      type: 'get',
+      data: {
+        job_uuid: '{{ job_id }}',
+        template_id: '{{ template_id }}',
+      },
+      beforeSend: function () {
+        beforeSendHook();
+      },
+      dataType: 'html',
+      success: (data) => {
+        successHooks(data);
+      },
+    });
+  };
+
+  let hasPlaceHolderFlag = false;
+  const putInPlaceholder = () => {
+    if (!hasPlaceHolderFlag) {
+      $('#loader-col').append(loadingPlaceholder);
+      hasPlaceHolderFlag = true;
+    }
+  };
+
+  const removePlaceholder = () => {
+    if (jobStatus === 'Successful') {
+      $('#loader-col').find('#loader').remove();
+    }
+  };
+
+  const stdOutDisplay = (data) => {
+    $('#outputDisplay').html(data);
+    $('#outputDisplay').addClass('pre-scrollable');
+  };
+
+  const continueRateLimitCheck = (data) => data.status != 'Successful' && data.status != 'Failed';
+  const restartRateLimitCheck = (data, rateLimitVariables) => {
+    const { currentDelay, maxTimeWindow } = rateLimitVariables;
+    return ((data.status != 'Successful' && data.status !='Failed') && currentDelay >= maxTimeWindow);
+  }
+
+  const apiCall = async () => {
+    const data = await loadJobStatus((data) => {
+      updateJobStatusPill(data);
+      setJobStatus(data);
+    });
+    loadStdOut(
+      () => {
+      putInPlaceholder();
+    }, 
+      (data) => {
+      removePlaceholder();
+      stdOutDisplay(data);
+    });
+    return data;
+  };
+
+  const rateLimitedApiCall = async (
+    apiCall,
+    continueRateLimitCheck,
+    restartRateLimitCheck,
+    maxTimeWindow,
+    maxRequests,
+    initialCurrentDelay = 1000,
+    timeOuts = [],
+  ) => {
+    let interval = 0;
+    let currentDelay = initialCurrentDelay;
+
+    const continueRateLimitFunc = () => {
+      let lastDelay = currentDelay;
+      currentDelay = maxTimeWindow ** ((interval + 1) / maxRequests);
+      interval++;
+      timeOuts.push(setTimeout(wrappedRateLimitedApiCall, currentDelay - lastDelay));
+    };
+
+    const restartRateLimit = async () => {
+      clearAllTimeouts();
+      interval = 0;
+      currentDelay = initialCurrentDelay;
+      await wrappedRateLimitedApiCall();
+    };
+  
+    const clearAllTimeouts = () => {
+      timeOuts.forEach((timeout) => clearTimeout(timeout))
+      timeOuts.length = 0;
+    }
+
+    const wrappedRateLimitedApiCall = async () => {
+      try {
+        const data = await apiCall();
+
+        if (restartRateLimitCheck(data, {currentDelay, interval, maxTimeWindow, maxRequests})) {
+          restartRateLimit();
+          return;
+        }
+        
+        if (continueRateLimitCheck(data) && currentDelay < maxTimeWindow) {
+          continueRateLimitFunc();
+          return;
+        }
+        
+        clearAllTimeouts();
+        return data;
+      } catch (error) {
+        continueRateLimitFunc();
+      }
+    };
+
+    return await wrappedRateLimitedApiCall();
+  };
+
+  const launchedJobStdoutUrl = "{{ stdout_url }}";
+
+  $(document).ready(() => {
+    if (launchedJobStdoutUrl) {
+      history.pushState(null, null, document.URL);
+      window.addEventListener('popstate', function () {
+        history.pushState(null, null, document.URL);
+      });
+      window.addEventListener('beforeunload', function(e){
+      var confirmationMessage = 'Do you wish to launch template again?';
+      (e || window.event).returnValue = confirmationMessage;
+      return confirmationMessage;
+      });
+      rateLimitedApiCall(apiCall, continueRateLimitCheck, restartRateLimitCheck, 30*60*1000, 20);
+    }
+
+    $(document).on('click', '#refresh', async () => {
+      if (launchedJobStdoutUrl) {
+        await restartRateLimit();
+      }
+    });
+  });
+  </script>
+{% endblock extra_js %}
