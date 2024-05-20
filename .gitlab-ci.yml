@@ -1,8 +1,20 @@
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+  - template: Jobs/License-Scanning.gitlab-ci.yml
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+variables:
+  SECURE_ANALYZERS_PREFIX: "harbor.rke.pandora.com/gitlab"
+  SCAN_KUBERNETES_MANIFESTS: "true"
+
 stages:
 - Remote-Check-Out
-- Remote-Code-Scanning
-- Code Check-In
-- Sast-Scan
+- Project-Build
+- test
+- XCA-Testing
+- Container-Image-Scanning
+- Check-Quality-Gate
+- Push-Image
 
 Remote-Check-Out:
   stage: Remote-Check-Out
@@ -10,24 +22,45 @@ Remote-Check-Out:
   script:
     - pwd
 
-Remote-Code-Scanning:
-  stage: Remote-Code-Scanning
+
+# Sast-Scan:
+#   stage: Sast-Scan
+#   image: registry.gitlab.com/gitlab-org/security-products/analyzers/semgrep
+#   script:
+#     - echo "sast scan"
+#     # - semgrep --config=p/security-audit --json Build_Pipeline
+#   artifacts:
+#     reports:
+#       sast: gl-sast-report.json
+
+Project-Build:
+  stage: Project-Build
   image: docker:19.03.12
   script:
     - pwd
 
-Code Check-In:
-  stage: Code Check-In
+
+XCA-Testing:
+  stage: XCA-Testing
   image: docker:19.03.12
   script:
     - pwd
 
-Sast-Scan:
-  stage: Sast-Scan
-  image: registry.gitlab.com/gitlab-org/security-products/analyzers/semgrep
+Container-Image-Scanning:
+  stage: Container-Image-Scanning
+  image: docker:19.03.12
   script:
-    - echo "sast scan"
-    # - semgrep --config=p/security-audit --json Build_Pipeline
-  artifacts:
-    reports:
-      sast: gl-sast-report.json
+    - pwd
+
+
+Check-Quality-Gate:
+  stage: Check-Quality-Gate
+  image: docker:19.03.12
+  script:
+    - pwd
+
+Push-Image:
+  stage: Push-Image
+  image: docker:19.03.12
+  script:
+    - pwd
