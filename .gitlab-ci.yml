@@ -21,7 +21,8 @@ Remote-Check-Out:
   image: docker:19.03.12
   script:
     - pwd
-
+  only:
+    - develop
 
 # Sast-Scan:
 #   stage: Sast-Scan
@@ -38,6 +39,8 @@ Project-Build:
   image: docker:19.03.12
   script:
     - pwd
+  only:
+    - develop
 
 
 XCA-Testing:
@@ -45,22 +48,29 @@ XCA-Testing:
   image: docker:19.03.12
   script:
     - pwd
+  only:
+    - develop
 
 Container-Image-Scanning:
   stage: Container-Image-Scanning
   image: docker:19.03.12
   script:
     - pwd
-
+  only:
+    - develop
 
 Check-Quality-Gate:
   stage: Check-Quality-Gate
   image: docker:19.03.12
   script:
     - pwd
+  only:
+    - develop
 
 Push-Image:
   stage: Push-Image
   image: docker:19.03.12
   script:
     - pwd
+  only:
+    - develop
